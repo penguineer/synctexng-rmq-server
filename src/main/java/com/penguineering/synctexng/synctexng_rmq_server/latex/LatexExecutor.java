@@ -48,6 +48,11 @@ public class LatexExecutor extends WorkdirPathOperatorBase {
             try {
                 passes++;
 
+                if (passes > 8) {
+                    logger.error("Too many passes, aborting");
+                    break;
+                }
+
                 logger.info("Compiling LaTeX document, pass: {}", passes);
 
                 this.compileOnePass();
@@ -64,7 +69,6 @@ public class LatexExecutor extends WorkdirPathOperatorBase {
                     logger.info("LaTeX document contains errors: {}", lastLogSummary.errors());
                     break;
                 }
-
             } catch (IOException | InterruptedException e) {
                 logger.info("Failed to compile LaTeX document", e);
             } while (Objects.nonNull(lastLogSummary) && lastLogSummary.isRepeatPass());
