@@ -20,6 +20,21 @@ Configuration is done using environment variables:
 * `RMQ_VHOST`: Virtual host for RabbitMQ (default `/`)
 * `RMQ_QUEUE_TEX_REQUESTS`: Queue for TeX requests (default `tex-requests`)
 
+## API
+
+The service accepts ZIP archives containing LaTeX files in its root and compiles them into PDF documents. Up to eight
+passes are performed to ensure that all references are resolved. After eight passes, compilation is aborted and the log
+files are returned together with the PDF generated so far.
+
+*WIP* Currently the archive must contain exactly one `.tex` file, which is chosen as the main document.
+If more than one `.tex` file is present, the first one in the ZIP file listing is chosen.
+Other files can be included as needed.
+
+The response is sent to the `replyTo` queue specified in the request message and contains a ZIP archive with the
+compiled PDF document, if compilation was successful, and the log files generated during each pass.
+
+*WIP* If the message cannot be processed, it is discarded. A more robust error handling is planned.
+
 ## Run with Docker
 
 With the configuration stored in a file `.env`, the service can be run as follows:
