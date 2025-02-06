@@ -1,0 +1,24 @@
+server:
+  port: 0
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health"
+    access:
+      default: read_only
+  endpoint:
+    health:
+      access: read_only
+
+spring:
+  application:
+    name: SyncTexNg-RMQ-Server-Test
+
+  rabbitmq:
+    listener:
+      direct:
+        auto-startup: false
+      simple:
+        auto-startup: false
