@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.penguineering.synctexng</groupId>
 	<artifactId>synctexng-rmq-server</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0</version> <!-- Populated by jgitver -->
 	<name>synctexng-rmq-server</name>
 	<description>Next Generation SyncText Server using RabbitMQ</description>
 	<url/>

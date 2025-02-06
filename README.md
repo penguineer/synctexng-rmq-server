@@ -8,3 +8,8 @@ into a PDF document, while using purely RabbitMQ for communication.
 
 This application does not make any assumptions regarding the LaTeX content.
 Generating specific files from templates etc. is left to calling agents.
+
+## Development
+
+Version numbers are determined with [jgitver](https://jgitver.github.io/).
+If you encounter a project version `0` there is an issue with the jgitver generator.
