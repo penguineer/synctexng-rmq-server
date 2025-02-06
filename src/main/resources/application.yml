@@ -22,3 +22,7 @@ spring:
     username: ${RMQ_USER:guest}
     password: ${RMQ_PASSWORD:guest}
     virtual-host: ${RMQ_VHOST:/}
+
+synctexng:
+    server:
+      queue-tex-requests: ${RMQ_QUEUE_TEX_REQUESTS:tex-requests}
