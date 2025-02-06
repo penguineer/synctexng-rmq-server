@@ -9,6 +9,12 @@ into a PDF document, while using purely RabbitMQ for communication.
 This application does not make any assumptions regarding the LaTeX content.
 Generating specific files from templates etc. is left to calling agents.
 
+## Configuration
+
+Configuration is done using environment variables:
+
+* `PORT`: Port for the HTTP endpoint (default `8080`, only change when running locally!)
+
 ## Run with Docker
 
 With the configuration stored in a file `.env`, the service can be run as follows:
