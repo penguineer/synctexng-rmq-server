@@ -17,8 +17,8 @@ spring:
     name: SyncTexNg-RMQ-Server
 
   rabbitmq:
-    listener:
-      direct:
-        auto-startup: false
-      simple:
-        auto-startup: false
+    host: ${RMQ_HOST:localhost}
+    port: ${RMQ_PORT:5672}
+    username: ${RMQ_USER:guest}
+    password: ${RMQ_PASSWORD:guest}
+    virtual-host: ${RMQ_VHOST:/}
