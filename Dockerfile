@@ -9,6 +9,14 @@ RUN java -Djarmode=layertools -jar application.jar extract
 
 FROM eclipse-temurin:21
 
+# Install necessary packages and TeX Live
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    texlive-full \
+    curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 EXPOSE 8080
 ENV PORT=8080
 
