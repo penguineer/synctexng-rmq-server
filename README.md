@@ -13,6 +13,12 @@ left to the calling agents.
 Configuration is done using environment variables:
 
 * `PORT`: Port for the HTTP endpoint (default `8080`, only change when running locally!)
+* `RMQ_HOST`: Host for RabbitMQ (default `localhost`)
+* `RMQ_PORT`: Port for RabbitMQ (default `5672`)
+* `RMQ_USER`: Username for RabbitMQ (default `guest`)
+* `RMQ_PASSWORD`: Password for RabbitMQ (default `guest`)
+* `RMQ_VHOST`: Virtual host for RabbitMQ (default `/`)
+* `RMQ_QUEUE_TEX_REQUESTS`: Queue for TeX requests (default `tex-requests`)
 
 ## Run with Docker
 
