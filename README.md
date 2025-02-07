@@ -67,6 +67,9 @@ If possible, please stick to the following guidelines:
 * If a large change is planned, it is best to open a feature request issue first, then link subsequent PRs to this
   issue, so that the PRs move the code towards the intended feature.
 
+If you miss a LaTeX package, which cannot be included in the request archive, or miss a language, please do not hesitate
+to open an issue or PR.
+
 ## License
 
 [MIT](LICENSE.txt) © 2025 Stefan Haun and contributors
