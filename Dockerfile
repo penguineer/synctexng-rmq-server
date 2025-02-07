@@ -16,7 +16,11 @@ RUN apt-get update && \
         texlive-latex-extra \
         texlive-science \
         texlive-fonts-extra \
-        texlive-lang-all \
+        texlive-lang-english \
+        texlive-lang-french \
+        texlive-lang-german \
+        texlive-lang-italian \
+        texlive-lang-spanish \
         curl && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
