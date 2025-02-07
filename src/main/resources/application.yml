@@ -26,3 +26,4 @@ spring:
 synctexng:
     server:
       queue-tex-requests: ${RMQ_QUEUE_TEX_REQUESTS:tex-requests}
+      work-dir: ${WORK_DIR:}
