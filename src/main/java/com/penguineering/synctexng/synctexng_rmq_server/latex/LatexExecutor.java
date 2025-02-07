@@ -1,5 +1,7 @@
 package com.penguineering.synctexng.synctexng_rmq_server.latex;
 
+import com.penguineering.synctexng.synctexng_rmq_server.rmq.JobResult;
+import com.penguineering.synctexng.synctexng_rmq_server.rmq.JobStatus;
 import com.penguineering.synctexng.synctexng_rmq_server.workdir.WorkDir;
 import com.penguineering.synctexng.synctexng_rmq_server.workdir.WorkDirSupplied;
 import org.slf4j.Logger;
@@ -42,18 +44,21 @@ public class LatexExecutor extends WorkDirSupplied {
     }
 
 
-    public void compileDocument() {
+    public JobResult compileDocument() {
         LatexLogSummary lastLogSummary = null;
+        JobStatus status = JobStatus.FINISHED;
 
+        final int maxPasses = 8;
         int passes = 0;
         do
             try {
-                passes++;
-
-                if (passes > 8) {
+                if (passes > maxPasses - 1) {
                     logger.error("Too many passes, aborting");
+                    status = JobStatus.THROTTLED;
                     break;
                 }
+
+                passes++;
 
                 logger.info("Compiling LaTeX document, pass: {}", passes);
 
@@ -81,5 +86,21 @@ public class LatexExecutor extends WorkDirSupplied {
         if (Objects.nonNull(lastLogSummary) && !lastLogSummary.hasErrors())
             resultArchivePathConsumer.accept(
                     nameRoot.resolveSibling(nameRoot.getFileName().toString() + ".pdf"));
+
+        return new JobResult(
+                (Objects.nonNull(lastLogSummary) && lastLogSummary.hasErrors()) ? JobStatus.FAILED : status,
+                (Objects.nonNull(lastLogSummary) && lastLogSummary.hasErrors())
+                        ? null
+                        : getRelativePdfPath().toString(),
+                passes,
+                null,
+                Objects.nonNull(lastLogSummary) && lastLogSummary.hasWarnings() ? lastLogSummary.warnings() : null,
+                Objects.nonNull(lastLogSummary) && lastLogSummary.hasErrors() ? lastLogSummary.errors() : null
+        );
     }
+
+    private Path getRelativePdfPath() {
+        return getWorkPath().relativize(nameRoot.resolveSibling(nameRoot.getFileName().toString() + ".pdf"));
+    }
+
 }
