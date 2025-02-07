@@ -32,9 +32,9 @@ If more than one `.tex` file is present, the first one in the ZIP file listing i
 Other files can be included as needed.
 
 The response is sent to the `replyTo` queue specified in the request message and contains a ZIP archive with the
-compiled PDF document, if compilation was successful, and the log files generated during each pass.
-
-*WIP* If the message cannot be processed, it is discarded. A more robust error handling is planned.
+compiled PDF document, if compilation was successful, the log files generated during each pass, as well as a summary of
+the compilation process in JSON format, stored in `META-INF/result.json`. If errors occur during processing, they can
+be found in this result file.
 
 ## Run with Docker
 

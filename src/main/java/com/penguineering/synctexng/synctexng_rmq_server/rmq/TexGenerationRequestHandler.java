@@ -1,5 +1,6 @@
 package com.penguineering.synctexng.synctexng_rmq_server.rmq;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.penguineering.synctexng.synctexng_rmq_server.archive.RequestArchiveExtractor;
 import com.penguineering.synctexng.synctexng_rmq_server.archive.ResultArchiveCompressor;
 import com.penguineering.synctexng.synctexng_rmq_server.latex.LatexExecutor;
@@ -14,7 +15,9 @@ import org.springframework.amqp.rabbit.listener.api.ChannelAwareMessageListener;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -22,11 +25,14 @@ import java.util.Optional;
 public class TexGenerationRequestHandler implements ChannelAwareMessageListener {
     private static final Logger logger = LoggerFactory.getLogger(TexGenerationRequestHandler.class);
 
+    private final ObjectMapper objectMapper;
     private final WorkDirFactory workDirFactory;
     private final RabbitTemplate rabbitTemplate;
 
-    public TexGenerationRequestHandler(WorkDirFactory workDirFactory,
+    public TexGenerationRequestHandler(ObjectMapper objectMapper,
+                                       WorkDirFactory workDirFactory,
                                        RabbitTemplate rabbitTemplate) {
+        this.objectMapper = objectMapper;
         this.workDirFactory = workDirFactory;
         this.rabbitTemplate = rabbitTemplate;
     }
@@ -109,25 +115,44 @@ public class TexGenerationRequestHandler implements ChannelAwareMessageListener 
         try (var workDir = workDirFactory.createWorkDir()) {
             logger.info("Work Dir: {}", workDir);
 
-            // Process the zip archive
-            RequestArchiveExtractor extractor = new RequestArchiveExtractor(workDir);
-            extractor.unpack(input);
-
-            Path texRoot = extractor.getRootTexFile();
-
-            if (Objects.isNull(texRoot))
-                throw new IllegalArgumentException("No .tex file found in zip archive");
-            logger.info("Tex root: {}", extractor.getRootTexFile());
-            Path nameRoot = texRoot.resolveSibling(texRoot.getFileName().toString().replace(".tex", ""));
-
             // Create result archive
             ResultArchiveCompressor compressor = new ResultArchiveCompressor(workDir);
 
-            // Compile the LaTeX document
-            LatexExecutor latexExecutor = new LatexExecutor(workDir, nameRoot, compressor::addFilePath);
-            latexExecutor.compileDocument();
+            JobResult jobResult;
+
+            // The following exception are captured into the result
+            try {
+                // Process the zip archive
+                RequestArchiveExtractor extractor = new RequestArchiveExtractor(workDir);
+                extractor.unpack(input);
+
+                Path texRoot = extractor.getRootTexFile();
+
+                if (Objects.isNull(texRoot))
+                    throw new IllegalArgumentException("No .tex file found in zip archive");
+                logger.info("Tex root: {}", extractor.getRootTexFile());
+                Path nameRoot = texRoot.resolveSibling(texRoot.getFileName().toString().replace(".tex", ""));
+
+                // Compile the LaTeX document
+                LatexExecutor latexExecutor = new LatexExecutor(workDir, nameRoot, compressor::addFilePath);
+                jobResult = latexExecutor.compileDocument();
+
+            } catch (Exception e) {
+                logger.error("Failed to process the request", e);
+                jobResult = new JobResult(JobStatus.FAILED, null, 0,
+                        List.of(e.getMessage()),
+                        null, null);
+            }
+
+            if (Objects.nonNull(jobResult))
+                compressor.addFileInMemory(Path.of("META-INF/result.json"), marshalJobResult(jobResult));
 
             return compressor.createZipInMemory();
         }
+    }
+
+    private byte[] marshalJobResult(JobResult jobResult) throws IOException {
+        String json = objectMapper.writeValueAsString(jobResult);
+        return json.getBytes(StandardCharsets.UTF_8);
     }
 }
