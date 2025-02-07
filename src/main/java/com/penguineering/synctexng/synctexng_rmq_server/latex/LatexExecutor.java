@@ -1,6 +1,7 @@
 package com.penguineering.synctexng.synctexng_rmq_server.latex;
 
-import com.penguineering.synctexng.synctexng_rmq_server.WorkdirPathOperatorBase;
+import com.penguineering.synctexng.synctexng_rmq_server.workdir.WorkDir;
+import com.penguineering.synctexng.synctexng_rmq_server.workdir.WorkDirSupplied;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,19 +10,21 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-public class LatexExecutor extends WorkdirPathOperatorBase {
+public class LatexExecutor extends WorkDirSupplied {
     private static final Logger logger = LoggerFactory.getLogger(LatexExecutor.class);
 
 
     private final Path nameRoot;
     private final Consumer<Path> resultArchivePathConsumer;
+    private final LatexLogWrangler latexLogWrangler;
 
-    public LatexExecutor(Path workDir,
+    public LatexExecutor(WorkDir workDir,
                          Path nameRoot,
                          Consumer<Path> resultArchivePathConsumer) {
         super(workDir);
         this.nameRoot = nameRoot;
         this.resultArchivePathConsumer = resultArchivePathConsumer;
+        latexLogWrangler = new LatexLogWrangler(workDir, nameRoot);
     }
 
     public void compileOnePass() throws InterruptedException, IOException {
@@ -29,7 +32,7 @@ public class LatexExecutor extends WorkdirPathOperatorBase {
                 "pdflatex",
                 "-interaction=nonstopmode",
                 renderTexRootPath().toString());
-        pb.directory(getWorkDir().toFile());
+        pb.directory(getWorkPath().toFile());
         Process p = pb.start();
         p.waitFor();
     }
@@ -40,7 +43,6 @@ public class LatexExecutor extends WorkdirPathOperatorBase {
 
 
     public void compileDocument() {
-        LatexLogWrangler latexLogWrangler = new LatexLogWrangler(getWorkDir(), nameRoot);
         LatexLogSummary lastLogSummary = null;
 
         int passes = 0;
