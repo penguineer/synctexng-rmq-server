@@ -1,6 +1,7 @@
 package com.penguineering.synctexng.synctexng_rmq_server.archive;
 
-import com.penguineering.synctexng.synctexng_rmq_server.WorkdirPathOperatorBase;
+import com.penguineering.synctexng.synctexng_rmq_server.workdir.WorkDir;
+import com.penguineering.synctexng.synctexng_rmq_server.workdir.WorkDirSupplied;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -13,10 +14,10 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-public class ResultArchiveCompressor extends WorkdirPathOperatorBase {
+public class ResultArchiveCompressor extends WorkDirSupplied {
     private final List<Path> filesToZip = new ArrayList<>();
 
-    public ResultArchiveCompressor(Path workDir) {
+    public ResultArchiveCompressor(WorkDir workDir) {
         super(workDir);
     }
 
@@ -31,11 +32,11 @@ public class ResultArchiveCompressor extends WorkdirPathOperatorBase {
             for (Path filePath : this.filesToZip) {
                 // Check if the relativePath is within the workDir
                 var a = filePath.normalize();
-                var b = getWorkDir().normalize();
-                if (!filePath.normalize().startsWith(getWorkDir().normalize()))
+                var b = getWorkPath().normalize();
+                if (!filePath.normalize().startsWith(getWorkPath().normalize()))
                     throw new NoSuchFileException("The file " + filePath + " is not within the work directory.");
 
-                Path relativePath = getWorkDir().relativize(filePath);
+                Path relativePath = getWorkPath().relativize(filePath);
 
                 zos.putNextEntry(new ZipEntry(relativePath.toString()));
                 Files.copy(filePath, zos);

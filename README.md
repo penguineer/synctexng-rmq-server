@@ -19,6 +19,7 @@ Configuration is done using environment variables:
 * `RMQ_PASSWORD`: Password for RabbitMQ (default `guest`)
 * `RMQ_VHOST`: Virtual host for RabbitMQ (default `/`)
 * `RMQ_QUEUE_TEX_REQUESTS`: Queue for TeX requests (default `tex-requests`)
+* `WORK_DIR`: Working directory for TeX compilation; if empty, a temporary directory is created
 
 ## API
 

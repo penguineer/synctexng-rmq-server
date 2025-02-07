@@ -3,6 +3,7 @@ package com.penguineering.synctexng.synctexng_rmq_server.rmq;
 import com.penguineering.synctexng.synctexng_rmq_server.archive.RequestArchiveExtractor;
 import com.penguineering.synctexng.synctexng_rmq_server.archive.ResultArchiveCompressor;
 import com.penguineering.synctexng.synctexng_rmq_server.latex.LatexExecutor;
+import com.penguineering.synctexng.synctexng_rmq_server.workdir.WorkDirFactory;
 import com.rabbitmq.client.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +14,6 @@ import org.springframework.amqp.rabbit.listener.api.ChannelAwareMessageListener;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -22,9 +22,12 @@ import java.util.Optional;
 public class TexGenerationRequestHandler implements ChannelAwareMessageListener {
     private static final Logger logger = LoggerFactory.getLogger(TexGenerationRequestHandler.class);
 
+    private final WorkDirFactory workDirFactory;
     private final RabbitTemplate rabbitTemplate;
 
-    public TexGenerationRequestHandler(RabbitTemplate rabbitTemplate) {
+    public TexGenerationRequestHandler(WorkDirFactory workDirFactory,
+                                       RabbitTemplate rabbitTemplate) {
+        this.workDirFactory = workDirFactory;
         this.rabbitTemplate = rabbitTemplate;
     }
 
@@ -103,30 +106,28 @@ public class TexGenerationRequestHandler implements ChannelAwareMessageListener 
 
     private byte[] executeLatexBuild(byte[] input) throws IOException {
         // Create temporary directory
-        Path tempDir;
-        tempDir = Files.createTempDirectory("synctexng");
-        logger.info("Temp dir: {}", tempDir);
+        try (var workDir = workDirFactory.createWorkDir()) {
+            logger.info("Work Dir: {}", workDir);
 
-        // Process the zip archive
-        RequestArchiveExtractor extractor = new RequestArchiveExtractor(tempDir);
-        extractor.unpack(input);
+            // Process the zip archive
+            RequestArchiveExtractor extractor = new RequestArchiveExtractor(workDir);
+            extractor.unpack(input);
 
-        Path texRoot = extractor.getRootTexFile();
+            Path texRoot = extractor.getRootTexFile();
 
-        if (Objects.isNull(texRoot))
-            throw new IllegalArgumentException("No .tex file found in zip archive");
-        logger.info("Tex root: {}", extractor.getRootTexFile());
-        Path nameRoot = texRoot.resolveSibling(texRoot.getFileName().toString().replace(".tex", ""));
+            if (Objects.isNull(texRoot))
+                throw new IllegalArgumentException("No .tex file found in zip archive");
+            logger.info("Tex root: {}", extractor.getRootTexFile());
+            Path nameRoot = texRoot.resolveSibling(texRoot.getFileName().toString().replace(".tex", ""));
 
-        // Create result archive
-        ResultArchiveCompressor compressor = new ResultArchiveCompressor(tempDir);
+            // Create result archive
+            ResultArchiveCompressor compressor = new ResultArchiveCompressor(workDir);
 
-        // Compile the LaTeX document
-        LatexExecutor latexExecutor = new LatexExecutor(tempDir, nameRoot, compressor::addFilePath);
-        latexExecutor.compileDocument();
+            // Compile the LaTeX document
+            LatexExecutor latexExecutor = new LatexExecutor(workDir, nameRoot, compressor::addFilePath);
+            latexExecutor.compileDocument();
 
-        return compressor.createZipInMemory();
-
-        // TODO delete the temp directory
+            return compressor.createZipInMemory();
+        }
     }
 }

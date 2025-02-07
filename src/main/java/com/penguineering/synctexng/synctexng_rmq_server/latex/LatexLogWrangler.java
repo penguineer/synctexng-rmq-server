@@ -1,6 +1,7 @@
 package com.penguineering.synctexng.synctexng_rmq_server.latex;
 
-import com.penguineering.synctexng.synctexng_rmq_server.WorkdirPathOperatorBase;
+import com.penguineering.synctexng.synctexng_rmq_server.workdir.WorkDir;
+import com.penguineering.synctexng.synctexng_rmq_server.workdir.WorkDirSupplied;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -12,19 +13,19 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class LatexLogWrangler extends WorkdirPathOperatorBase {
+public class LatexLogWrangler extends WorkDirSupplied {
     public static final String LATEX_WARNING_PREFIX = "LaTeX Warning:";
     public static final String LATEX_ERROR_PREFIX = "! LaTeX Error:";
 
     private final Path nameRoot;
 
-    public LatexLogWrangler(Path workDir, Path nameRoot) {
+    public LatexLogWrangler(WorkDir workDir, Path nameRoot) {
         super(workDir);
         this.nameRoot = nameRoot;
     }
 
     public Path renderLogPath() {
-        return getWorkDir().resolve(nameRoot + ".log");
+        return getWorkPath().resolve(nameRoot + ".log");
     }
 
     public Path renderPassLogPath(int pass) {
