@@ -11,16 +11,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 @Getter
 public class RequestArchiveExtractor extends WorkDirSupplied {
-    private Path rootTexFile = null;
+    private final Consumer<Path> pathObserver;
 
-    public RequestArchiveExtractor(WorkDir workDir) {
+    public RequestArchiveExtractor(WorkDir workDir,
+                                   Consumer<Path> pathObserver) {
         super(workDir);
+        this.pathObserver = pathObserver;
     }
 
     public List<Path> unpack(byte[] data) throws IOException {
@@ -32,8 +34,8 @@ public class RequestArchiveExtractor extends WorkDirSupplied {
                 Path file = getWorkPath().resolve(zipEntry.getName());
                 files.add(file);
 
-                if (Objects.isNull(rootTexFile) && file.toString().endsWith(".tex"))
-                    rootTexFile = file;
+                Path relativeArchivePath = getWorkPath().relativize(file);
+                pathObserver.accept(relativeArchivePath);
 
                 Files.createDirectories(file.getParent());
                 Files.copy(zis, file);
