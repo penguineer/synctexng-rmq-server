@@ -27,8 +27,8 @@ The service accepts ZIP archives containing LaTeX files in its root and compiles
 passes are performed to ensure that all references are resolved. After eight passes, compilation is aborted and the log
 files are returned together with the PDF generated so far.
 
-*WIP* Currently the archive must contain exactly one `.tex` file, which is chosen as the main document.
-If more than one `.tex` file is present, the first one in the ZIP file listing is chosen.
+For LaTeX compilation, the file `main.tex` in the archive root is selected if it exists. If not, the first `.tex` file
+encountered during archive processing is chosen.
 Other files can be included as needed.
 
 The response is sent to the `replyTo` queue specified in the request message and contains a ZIP archive with the
