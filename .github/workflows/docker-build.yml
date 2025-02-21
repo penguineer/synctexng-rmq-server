@@ -38,9 +38,9 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ~/.m2
-        key: ${{ runner.os }}-m2-${ github.ref }}-${{ hashFiles('**/pom.xml') }}
+        key: ${{ runner.os }}-m2-${{ github.ref }}-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
-          ${{ runner.os }}-m2-${ github.ref }}
+          ${{ runner.os }}-m2-${{ github.ref }}
           ${{ runner.os }}-m2-main
 
     - name: Run Maven Build
