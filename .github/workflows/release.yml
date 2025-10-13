@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.ref }}
           # Needed for correct Maven version detection
@@ -20,6 +20,7 @@ jobs:
 
       - name: "Generate release changelog"
         id: generate-release-changelog
+        # Version 2.4 is available, but creates scrambled output
         uses: heinrichreimer/github-changelog-generator-action@v2.3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -32,7 +33,7 @@ jobs:
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: "Create GitHub release"
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref }}
           name: "${{ steps.get-version.outputs.VERSION }}"
