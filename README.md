@@ -49,6 +49,8 @@ docker run --rm \
 
 Please make sure to pin the container to a specific version in a production environment.
 
+The GitHub project stores [artifact attestations for the Docker image](https://github.com/penguineer/synctexng-rmq-server/attestations).
+
 ## Development
 
 Version numbers are determined with [jgitver](https://jgitver.github.io/).
