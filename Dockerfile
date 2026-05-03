@@ -7,23 +7,11 @@ COPY target/*.jar application.jar
 RUN java -Djarmode=layertools -jar application.jar extract
 
 
-FROM eclipse-temurin:21
-
-# Install necessary packages and TeX Live
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        texlive-latex-recommended texlive-fonts-recommended lmodern \
-        texlive-latex-extra \
-        texlive-science \
-        texlive-fonts-extra \
-        texlive-lang-english \
-        texlive-lang-french \
-        texlive-lang-german \
-        texlive-lang-italian \
-        texlive-lang-spanish \
-        curl && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# BASE_IMAGE must reference the pre-built base image containing Java and TeX Live.
+# Build the base image first using Dockerfile.base:
+#   docker build -f Dockerfile.base -t <your-base-image> .
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
 
 EXPOSE 8080
 ENV PORT=8080

@@ -13,6 +13,7 @@ on:
 env:
   REGISTRY: docker.io
   IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/synctexng-rmq-server
+  BASE_IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/synctexng-rmq-server-base
   TARGET_PLATFORMS: linux/amd64 #,linux/arm64,linux/arm/v7
 
 jobs:
@@ -85,6 +86,10 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            BASE_IMAGE=${{ env.REGISTRY }}/${{ env.BASE_IMAGE_NAME }}:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: ${{ github.event_name != 'pull_request' && format('type=registry,ref={0}/{1}:buildcache,mode=max', env.REGISTRY, env.IMAGE_NAME) || '' }}
 
       - name: Generate artifact attestation
         # The digest is only available after a push
