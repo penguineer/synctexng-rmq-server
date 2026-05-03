@@ -1,16 +1,6 @@
 name: Docker Base Image
 
 on:
-  push:
-    branches:
-      - 'main'
-    paths:
-      - 'Dockerfile.base'
-  pull_request:
-    branches:
-      - 'main'
-    paths:
-      - 'Dockerfile.base'
   workflow_dispatch:
 
 env:
