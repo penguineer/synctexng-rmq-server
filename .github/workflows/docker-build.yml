@@ -13,10 +13,61 @@ on:
 env:
   REGISTRY: docker.io
   IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/synctexng-rmq-server
+  BASE_IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/synctexng-rmq-server-base
   TARGET_PLATFORMS: linux/amd64 #,linux/arm64,linux/arm/v7
 
 jobs:
-  docker:
+  check:
+    name: Check changed files
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      base_changed: ${{ steps.filter.outputs.base }}
+      base_sha: ${{ steps.base_sha.outputs.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Compute base image SHA
+        id: base_sha
+        run: |
+          sha=$(git log -1 --format='%h' -- Dockerfile.base)
+          if [ -z "$sha" ]; then
+            echo "ERROR: Could not determine commit SHA for Dockerfile.base" >&2
+            exit 1
+          fi
+          echo "sha=$sha" >> $GITHUB_OUTPUT
+
+      - name: Check if Dockerfile.base changed
+        id: filter
+        # Tags are release events; base image changes are handled on branch pushes
+        if: github.ref_type != 'tag'
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            base:
+              - 'Dockerfile.base'
+
+  build-base:
+    name: Build Base Image (if changed)
+    needs: check
+    if: needs.check.outputs.base_changed == 'true'
+    permissions:
+      packages: write
+      contents: read
+    uses: ./.github/workflows/docker-base.yml
+    with:
+      push: ${{ github.event_name != 'pull_request' }}
+    secrets: inherit
+
+  build-app:
+    name: Build Docker Image
+    needs: [check, build-base]
+    # Run when check succeeded and build-base either succeeded or was skipped (Dockerfile.base unchanged)
+    if: always() && needs.check.result == 'success' && (needs.build-base.result == 'success' || needs.build-base.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -59,7 +110,7 @@ jobs:
             type=semver,pattern={{version}}
             # disabled if major zero
             type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
-            # generate lates from default branch
+            # generate latest from default branch
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
 
       - name: Set up QEMU
@@ -85,6 +136,10 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            BASE_IMAGE=${{ env.REGISTRY }}/${{ env.BASE_IMAGE_NAME }}:${{ needs.check.outputs.base_sha }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: ${{ github.event_name != 'pull_request' && format('type=registry,ref={0}/{1}:buildcache,mode=max', env.REGISTRY, env.IMAGE_NAME) || '' }}
 
       - name: Generate artifact attestation
         # The digest is only available after a push
