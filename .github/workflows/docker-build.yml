@@ -45,7 +45,7 @@ jobs:
         id: filter
         # Tags are release events; base image changes are handled on branch pushes
         if: github.ref_type != 'tag'
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           filters: |
             base:
