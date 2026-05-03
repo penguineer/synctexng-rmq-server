@@ -6,9 +6,15 @@ on:
       - 'main'
     tags:
       - 'v*'
+    paths-ignore:
+      - 'Dockerfile.base'
   pull_request:
     branches:
       - 'main'
+  workflow_run:
+    workflows: ["Docker Base Image"]
+    types:
+      - completed
 
 env:
   REGISTRY: docker.io
@@ -19,6 +25,8 @@ env:
 jobs:
   docker:
     runs-on: ubuntu-latest
+    # For workflow_run events, only proceed if the base image build succeeded
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     permissions:
       packages: write
       contents: read
@@ -28,7 +36,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.ref }}
           # Needed for correct version detection
           fetch-depth: 0
 
