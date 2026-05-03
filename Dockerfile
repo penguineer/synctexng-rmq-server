@@ -1,3 +1,8 @@
+# BASE_IMAGE must reference the pre-built base image containing Java and TeX Live.
+# Build the base image first using Dockerfile.base:
+#   docker build -f Dockerfile.base -t <your-base-image> .
+ARG BASE_IMAGE
+
 FROM eclipse-temurin:21 AS app-build
 
 WORKDIR application
@@ -7,10 +12,6 @@ COPY target/*.jar application.jar
 RUN java -Djarmode=layertools -jar application.jar extract
 
 
-# BASE_IMAGE must reference the pre-built base image containing Java and TeX Live.
-# Build the base image first using Dockerfile.base:
-#   docker build -f Dockerfile.base -t <your-base-image> .
-ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
 EXPOSE 8080
