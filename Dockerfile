@@ -1,11 +1,12 @@
 # BASE_IMAGE must reference the pre-built base image containing Java and TeX Live.
 # Build the base image first using Dockerfile.base:
 #   docker build -f Dockerfile.base -t <your-base-image> .
+# check=skip=InvalidDefaultArgInFrom
 ARG BASE_IMAGE
 
 FROM eclipse-temurin:21 AS app-build
 
-WORKDIR application
+WORKDIR /application
 
 COPY target/*.jar application.jar
 
@@ -19,7 +20,7 @@ ENV PORT=8080
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 CMD curl --fail http://localhost:8080/actuator/health || exit 1
 
-WORKDIR application
+WORKDIR /application
 
 COPY --from=app-build application/spring-boot-loader/ ./
 COPY --from=app-build application/dependencies/ ./
