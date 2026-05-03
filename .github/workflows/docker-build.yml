@@ -24,9 +24,22 @@ jobs:
       contents: read
     outputs:
       base_changed: ${{ steps.filter.outputs.base }}
+      base_sha: ${{ steps.base_sha.outputs.sha }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Compute base image SHA
+        id: base_sha
+        run: |
+          sha=$(git log -1 --format='%h' -- Dockerfile.base)
+          if [ -z "$sha" ]; then
+            echo "ERROR: Could not determine commit SHA for Dockerfile.base" >&2
+            exit 1
+          fi
+          echo "sha=$sha" >> $GITHUB_OUTPUT
 
       - name: Check if Dockerfile.base changed
         id: filter
@@ -124,7 +137,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            BASE_IMAGE=${{ env.REGISTRY }}/${{ env.BASE_IMAGE_NAME }}:latest
+            BASE_IMAGE=${{ env.REGISTRY }}/${{ env.BASE_IMAGE_NAME }}:${{ needs.check.outputs.base_sha }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
           cache-to: ${{ github.event_name != 'pull_request' && format('type=registry,ref={0}/{1}:buildcache,mode=max', env.REGISTRY, env.IMAGE_NAME) || '' }}
 
